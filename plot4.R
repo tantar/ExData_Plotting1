@@ -1,0 +1,48 @@
+library(dplyr)
+library(lubridate)
+
+##Loads EPC Data
+EPC <- fread("household_power_consumption.txt") %>%
+  filter(Date == c("1/2/2007", "2/2/2007"))
+
+##Converts Date colum to date object rather than character
+EPC <- mutate(EPC, Date.Time = paste(Date, Time), Date = NULL, Time = NULL, 
+              .before = "Global_active_power") %>%
+  mutate(EPC, Date.Time = parse_date_time(Date.Time,"d/m/y H:M:S"))
+
+##Converts Sub_metering to numeric vector
+EPC <- mutate(EPC, Sub_metering_1 = as.numeric(EPC$Sub_metering_1)) %>%
+  mutate(Sub_metering_2 = as.numeric(EPC$Sub_metering_2)) %>%
+  mutate(Sub_metering_3 = as.numeric(EPC$Sub_metering_3)) %>%
+  mutate(Voltage = as.numeric(EPC$Voltage)) %>%
+  mutate(Global_intensity = as.numeric(EPC$Global_intensity)) %>%
+  mutate(Global_active_power = as.numeric(EPC$Global_active_power)) %>%
+  mutate(Global_reactive_power = as.numeric(EPC$Global_reactive_power))
+
+##Creates png file 
+png("plot4.png", width = 480, height = 480)
+
+par(mfrow = c(2,2))
+
+##Creates plot 1
+plot(EPC$Date.Time, EPC$Global_active_power, type = "l", xlab = "",
+     ylab = "Global Active Power (kilowatts)")
+
+##Creates plot2
+plot(EPC$Date.Time, EPC$Voltage, type = "l", xlab = "datetime",
+     ylab = "Voltage")
+
+#Creates plot 3
+plot(EPC$Date.Time, EPC$Sub_metering_1, type = "l", col = "Black", xlab = "", 
+     ylab = "Energy sub metering")
+points(EPC$Date.Time, EPC$Sub_metering_2, type = "l", col = "Red")
+points(EPC$Date.Time, EPC$Sub_metering_3, type = "l", col = "Blue")
+legend("topright", legend = c("Sub_metering_1", "Sub_metering_2", 
+                              "Sub_metering_3"), col = c("Black", "Red", "Blue")
+       , lwd = 1, bty = "n")
+
+#Creates plot 4
+plot(EPC$Date.Time, EPC$Global_reactive_power, type = "l", xlab = "", 
+     ylab = "Global_reactive_power")
+
+dev.off()
